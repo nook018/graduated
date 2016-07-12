@@ -1,0 +1,34 @@
+MAKEFILE = Makefile
+CC = g++
+OPTIONS = -O3
+BINDIR = ../bin
+ 
+SRCS= main.cpp err_handler.cpp filter.cpp filter_db.cpp  util.cpp  CDE.cpp MemTrack.cpp
+OBJS= ${SRCS:.cpp=.o}
+
+.SUFFIXES : .h .cpp .o
+.cpp.o: 
+	$(CC) ${OPTIONS} -c $< 
+
+all: tcda
+ 
+tcda: ${OBJS}
+	${CC} ${OPTIONS} -o ${BINDIR}/rsfr ${OBJS}
+
+clean:
+	rm -f ${BINDIR}/tcda *.o
+
+depend:
+	sed -e '/^#START DEPS/,$$d' ${MAKEFILE} > ${MAKEFILE}.new
+	echo '#START DEPS - Do not change this line or anything after it.' >> ${MAKEFILE}.new
+	gcc -MM ${SRCS} >> ${MAKEFILE}.new
+	mv ${MAKEFILE}.new ${MAKEFILE}
+
+#START DEPS - Do not change this line or anything after it.
+main.o: main.cpp CD.h filter_db.h filter.h util.h err_handler.h \
+ MemTrack.h
+err_handler.o: err_handler.cpp err_handler.h
+filter.o: filter.cpp filter.h util.h
+filter_db.o: filter_db.cpp filter_db.h filter.h util.h
+util.o: util.cpp util.h
+MemTrack.o: MemTrack.cpp MemTrack.h
