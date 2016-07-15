@@ -247,7 +247,7 @@ MemTrack.o: MemTrack.cpp MemTrack.h
 
 ${BINDIR}/rsfr: main.o err_handler.o filter.o filter_db.o util.o CD.o MemTrack.o
 #${BINDIR}/rsfr: main.o err_handler.o filter.o filter_db.o util.o MemTrack.o
-	$(EXEC) $(NVCC) -O3 $(ALL_LDFLAGS) $(GENCODE_FLAGS) -o $@ $+ $(LIBRARIES)
+	$(EXEC) $(NVCC) $(ALL_LDFLAGS) $(GENCODE_FLAGS) -o $@ $+ $(LIBRARIES)
 
 clean:
 	rm -f ${BINDIR}/tcda *.o

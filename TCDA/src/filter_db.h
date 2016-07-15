@@ -9,7 +9,7 @@
 
 class clsFilterDB {
 public:
-    clsFilterDB(void);
+    	clsFilterDB(void);
 	~clsFilterDB(void);
 	void clear(void);
 	void dump(void);
@@ -20,14 +20,14 @@ public:
 	filter	*addfilterSet_;
 private:
 // 2011/07/11 update
-    void readRange(FILE*, int*, int*);
+	void readRange(FILE*, int*, int*);
 	void readProtocol(FILE*, int*);
 //
 // 2012/07/09 update
-    void readStream(int, int, int, int, int, int*);
+    	void readStream(int, int, int, int, int, int*);
 //
 	void readPrefix(FILE*, unsigned char*, UINT64*, unsigned char*);
-    int cntr_;
+    	int cntr_;
 };
 
 #endif

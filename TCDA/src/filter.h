@@ -3,11 +3,21 @@
 
 #include	"util.h"
 
-//add for store gpu result
+#define N 100000
+
+//add for store gpu result, SoA
 class dev_var{
 public:
     int result;
     int set;
+};
+
+
+//add for store gpu result, SoA
+class dev_soa{
+public:
+    int result[N];
+    int set[N];
 };
 
 
@@ -18,14 +28,44 @@ public:
 	unsigned char srcIPPref_[4];
 
 	UINT64	  destIP_;
-    unsigned char destIPLen_;
+    	unsigned char destIPLen_;
 	unsigned char destIPPref_[4];
 // 2011/07/11 update
-    int srcPortleft_;
-    int srcPortright_;
-    int destPortleft_;
-    int destPortright_;
-    int pro_num_;
+    	int srcPortleft_;
+    	int srcPortright_;
+    	int destPortleft_;
+    	int destPortright_;
+    	int pro_num_;
+//
+// 2012/07/09 update
+    	int bitstream;
+//
+	unsigned int	cost_;
+	bool	Traceflag;
+    	bool  add_marker;
+    	bool  marker;
+    	filter *Pointer;
+	filter *FPointer;
+	filter();
+	void dump(void);
+};
+/*
+class filter_CUDA{
+public:
+	UINT64 	  srcIP_[N];
+	unsigned char srcIPLen_[N];
+	unsigned char srcIPPref_[N][4];
+
+	UINT64	  destIP_[N];
+    	unsigned char destIPLen_[N];
+	unsigned char destIPPref_[N][4];
+// 2011/07/11 update
+	int srcPortleft_[N];
+    	int srcPortright_[N];
+    	int destPortleft_[N];
+    	int destPortright_[N];
+    	int pro_num_[N];
+
 //
 // 2012/07/09 update
     int bitstream;
@@ -38,8 +78,9 @@ public:
 	filter *FPointer;
 	filter();
 	void dump(void);
-};
 
+};
+*/
 struct ltFilter	
 {
     bool operator()(filter f1, filter f2) const

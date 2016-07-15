@@ -240,14 +240,14 @@ filter_db.o: filter_db.cpp filter_db.h filter.h util.h
 	$(EXEC) $(NVCC) $(INCLUDES) $(ALL_CCFLAGS) $(GENCODE_FLAGS) -o $@ -c $<
 util.o: util.cpp util.h
 	$(EXEC) $(NVCC) $(INCLUDES) $(ALL_CCFLAGS) $(GENCODE_FLAGS) -o $@ -c $<
-#CD.o: CD.cpp CD.h filter_db.h filter.h util.h TableO.cpp
-#	$(EXEC) $(NVCC) $(INCLUDES) $(ALL_CCFLAGS) $(GENCODE_FLAGS) -o $@ -c $<
+CD.o: CD.cpp CD.h filter_db.h filter.h util.h TableO.cpp
+	$(EXEC) $(NVCC) $(INCLUDES) $(ALL_CCFLAGS) $(GENCODE_FLAGS) -o $@ -c $<
 MemTrack.o: MemTrack.cpp MemTrack.h
 	$(EXEC) $(NVCC) $(INCLUDES) $(ALL_CCFLAGS) $(GENCODE_FLAGS) -o $@ -c $<
 
-#${BINDIR}/rsfr: main.o err_handler.o filter.o filter_db.o util.o CD.o MemTrack.o
-${BINDIR}/rsfr: main.o err_handler.o filter.o filter_db.o util.o MemTrack.o
-	$(EXEC) $(NVCC) -O3 $(ALL_LDFLAGS) $(GENCODE_FLAGS) -o $@ $+ $(LIBRARIES)
+${BINDIR}/rsfr: main.o err_handler.o filter.o filter_db.o util.o CD.o MemTrack.o
+#${BINDIR}/rsfr: main.o err_handler.o filter.o filter_db.o util.o MemTrack.o
+	$(EXEC) $(NVCC) $(ALL_LDFLAGS) $(GENCODE_FLAGS) -o $@ $+ $(LIBRARIES)
 
 clean:
 	rm -f ${BINDIR}/tcda *.o

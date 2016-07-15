@@ -435,4 +435,4 @@ nice -20  ./rsfr $filterDIR/ipc2_30K
 nice -20  ./rsfr $filterDIR/ipc2_30K
 nice -20  ./rsfr $filterDIR/ipc2_30K
 
-./c.out 3 0707TCDA.txt result_TCDA.txt
+./c.out 3 0714_512dbTCDA.txt 0714_512dbresult_TCDA.txt
