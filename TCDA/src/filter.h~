@@ -3,9 +3,9 @@
 
 #include	"util.h"
 
-//#define N 100000
+#define N 100000
 
-//add for store gpu result, SoA
+//add for store gpu result, AoS
 class dev_var{
 public:
     int result;
@@ -16,8 +16,8 @@ public:
 //add for store gpu result, SoA
 class dev_soa{
 public:
-    int *result;
-    int *set;
+    int result[N];
+    int set[N];
 };
 
 

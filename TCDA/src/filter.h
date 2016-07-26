@@ -5,7 +5,7 @@
 
 #define N 100000
 
-//add for store gpu result, SoA
+//add for store gpu result, AoS
 class dev_var{
 public:
     int result;
@@ -23,27 +23,27 @@ public:
 
 class filter	{
 public:
-	UINT64 	  srcIP_;
-	unsigned char srcIPLen_;
-	unsigned char srcIPPref_[4];
+	UINT64 	  srcIP_; // int 4 byte
+	unsigned char srcIPLen_; // 1 byte
+	unsigned char srcIPPref_[4]; // 4 byte
 
-	UINT64	  destIP_;
-    	unsigned char destIPLen_;
-	unsigned char destIPPref_[4];
+	UINT64	  destIP_; // int 4 byte
+    	unsigned char destIPLen_; // 1 byte
+	unsigned char destIPPref_[4]; // 4 byte
 // 2011/07/11 update
-    	int srcPortleft_;
-    	int srcPortright_;
-    	int destPortleft_;
-    	int destPortright_;
-    	int pro_num_;
+    	int srcPortleft_; // 4 byte
+    	int srcPortright_; // 4 byte
+    	int destPortleft_; // 4 byte
+    	int destPortright_; // 4 byte
+    	int pro_num_; // 4 byte
 //
 // 2012/07/09 update
-    	int bitstream;
+    	int bitstream; //4 byte
 //
-	unsigned int	cost_;
-	bool	Traceflag;
-    	bool  add_marker;
-    	bool  marker;
+	unsigned int	cost_; // 4 byte
+	bool	Traceflag; // 4 byte
+    	bool  add_marker; // 0
+    	bool  marker; // 0 
     	filter *Pointer;
 	filter *FPointer;
 	filter();
