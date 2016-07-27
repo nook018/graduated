@@ -36,8 +36,7 @@ __inline__ __device__ int warpReduceSum(int val)
 
 __inline__ __device__ int blockReduceSum(int val)
 {
-    static __shared__ int shared[16];
-    
+    static __shared__ int shared[32];
     int lane = threadIdx.x % warpSize;
     int wid = threadIdx.x / warpSize; 
     
@@ -113,12 +112,12 @@ __global__ void gpu_conflict_detect_0(filter * const __restrict__ filterSet, int
     int base = rule_size/threadSize+1;
     int start = threadID*base;
     int total = 0;
-    
+
     //printf("threadSize:%d,%d\n", threadSize, rule_size/threadSize + 1);
-    if(start > rule_size) return;
-    for (int i=start; i<(start+base) && i<rule_size ; i++) {
     //for(int i=threadID; i<rule_size; i+=threadSize){  
-        #pragma unroll    
+    if(threadID > rule_size) return;
+    for (int i=start; i<(start+base) && i<rule_size ; i++) {
+	//devTotal[threadID].set = 1;    
         for (int j= 0; j<rule_size; j++) {
 	    //if(j>=i) return;
             if( filterSet[i].srcIPLen_ > filterSet[j].srcIPLen_ ){
@@ -203,7 +202,6 @@ __global__ void gpu_conflict_detect_0(filter * const __restrict__ filterSet, int
     if(threadIdx.x == 0)
 	d_total[blockIdx.x] = total;
 
-
 }
 
 // base on new, distribute filters to thread by order. (approach 1)
@@ -216,10 +214,10 @@ __global__ void gpu_conflict_detect_1(filter * const __restrict__ filterSet, int
     int start = threadID*base;
     int total = 0;
    
-    if(start > rule_size) return;
-    for (int i=start; i<(start+base) && i<rule_size ; i++) {
     //for(int i=threadID; i<rule_size; i+=threadSize){  
-        #pragma unroll     
+    if(threadID > rule_size) return;
+    for (int i=start; i<(start+base) && i<rule_size ; i++) {
+	//devTotal[threadID].set = 1;      
         for (int j= 0; j<i; j++) {
 	    //if(j>=i) break;
             if( filterSet[i].srcIPLen_ > filterSet[j].srcIPLen_ ){
@@ -301,8 +299,6 @@ __global__ void gpu_conflict_detect_1(filter * const __restrict__ filterSet, int
     total = blockReduceSum(total);
     if(threadIdx.x == 0)
 	d_total[blockIdx.x] = total;
-
-
 }
 
 // base on new, distribute filters to thread by work. (approach 2)
@@ -312,14 +308,13 @@ __global__ void gpu_conflict_detect_2(filter * const __restrict__ filterSet, int
     int start = threadIdx.x * gridDim.x + blockIdx.x;
     int threadSize = gridDim.x * blockDim.x;
     int total = 0;
-    
+    int i, j;
     //printf("threadSize:%d,%d\n", threadSize, rule_size/threadSize + 1);
     if(start > rule_size) return;
-    for (int i=start; i<rule_size; i+=threadSize) {
+    for (i=start; i<rule_size; i+=threadSize) {
     //for(int i=threadID; i<rule_size; i+=threadSize){  
         //devTotal[threadIndex].set = 1;
-         #pragma unroll
-         for (int j= 0; j<i; j++) {
+        for (j= 0; j<i; j++) {
 	    //if(j>=i) break;
             if( filterSet[i].srcIPLen_ > filterSet[j].srcIPLen_ ){
                 if( genPrefix(filterSet[i].srcIP_, filterSet[j].srcIPLen_) == filterSet[j].srcIP_ ){
@@ -404,8 +399,10 @@ __global__ void gpu_conflict_detect_2(filter * const __restrict__ filterSet, int
     }
     //printf("%d\t", total);
     total = blockReduceSum(total);
+    
     if(threadIdx.x == 0)
 	d_total[blockIdx.x] = total;
+
 }
 
 /*
@@ -593,9 +590,8 @@ void host_conflict_detect(filter *filterSet, int rule_size, int &total)
 
 int main(int argc, char *argv[])
 {
-    
+
     ofstream fout;
-    //fout.open("0727M2.txt", ios::app);  
     double sort_start, hconflict_start, g1conflict_start, g2conflict_start, g0conflict_start;
     double sort_time, hconflict_time, g1conflict_time, g2conflict_time, g0conflict_time;
     int db_size;
@@ -603,7 +599,7 @@ int main(int argc, char *argv[])
     int *d_total;// store device result
     int *h_total;// store host result
     int sum = 0;
-    
+
     // CUDA variable
     filter* dev_filterSet;	// store filter in device
    
@@ -613,8 +609,8 @@ int main(int argc, char *argv[])
 
     db_size = db.size();	// get database size
     printf("number of rules: %d\n", db_size);
-    int block = 128;
-    int grid = 8;
+    int block = 512;
+    int grid = 4;
     //int grid =( db_size + block - 1)/block;
     //if(grid == 0)
 	//grid = 1;
@@ -638,8 +634,7 @@ int main(int argc, char *argv[])
     cudaMemcpy(dev_filterSet, db.filterSet_, db_size * sizeof(filter), cudaMemcpyHostToDevice);
     cudaCheckErrors("cudaMemcpy1 fail");
     gpu_conflict_detect_0<<<grid, block>>>(dev_filterSet, db_size, d_total);
-    //cudaDeviceSynchronize();
-    
+    cudaDeviceSynchronize();
     
     // copy device result ot host
     cudaMemcpy(h_total, d_total, grid*sizeof(int), cudaMemcpyDeviceToHost);
@@ -649,18 +644,11 @@ int main(int argc, char *argv[])
     
     g0conflict_time = cpuSecond() - g0conflict_start;
     cout << "m0_detection_time: " << g0conflict_time << " usec" << endl;
-    printf("m0 conflict detection: %d\t", sum);
-    //for(int tmp = 0; tmp < grid; tmp++)
-	//cout<< h_total[tmp]<< "\t";
-    cout<<endl;
-    //fout<< g0conflict_time<< "\t";
-    //for(int tmp = 0; tmp < grid; tmp++)
-	//fout<< h_total[tmp]<< "\t";
-    //fout<< "\n";
+    printf("m0 conflict detection: %d\n", sum);
     free(h_total);
     cudaFree(dev_filterSet);
     cudaFree(d_total);
-    cudaDeviceReset();
+
 
     // sort filter with srcIPlen & desIPlen
     sort_start = cpuSecond();
@@ -683,9 +671,8 @@ int main(int argc, char *argv[])
     cudaMemcpy(dev_filterSet, db.filterSet_, db_size * sizeof(filter), cudaMemcpyHostToDevice);
     cudaCheckErrors("cudaMemcpy1 fail");
     gpu_conflict_detect_1<<<grid, block>>>(dev_filterSet, db_size, d_total);
-    //cudaDeviceSynchronize();
+    cudaDeviceSynchronize();
     
-
     // copy device result ot host
     cudaMemcpy(h_total, d_total, grid*sizeof(int), cudaMemcpyDeviceToHost);
     sum = 0;
@@ -694,18 +681,11 @@ int main(int argc, char *argv[])
      
     g1conflict_time = cpuSecond() - g1conflict_start;
     cout << "m1_detection_time: " << g1conflict_time << " usec" << endl;
-    printf("m1 conflict detection: %d\t", sum);
-    //for(int tmp = 0; tmp < grid; tmp++)
-	//cout<< h_total[tmp]<< "\t";
-    cout<<endl;
-    //fout<< g1conflict_time<< "\t";
-    //for(int tmp = 0; tmp < grid; tmp++)
-	//fout<< h_total[tmp]<< "\t";
-    //fout<< "\n";
+    printf("m1 conflict detection: %d\n", sum);
     free(h_total);
     cudaFree(dev_filterSet);
     cudaFree(d_total);
-    cudaDeviceReset();
+
 
 
 // ################ Prepare call M2 funtion ###################
@@ -723,8 +703,7 @@ int main(int argc, char *argv[])
     cudaMemcpy(dev_filterSet, db.filterSet_, db_size * sizeof(filter), cudaMemcpyHostToDevice);
     cudaCheckErrors("cudaMemcpy1 fail");
     gpu_conflict_detect_2<<<grid, block>>>(dev_filterSet, db_size, d_total);
-    //cudaDeviceSynchronize();
-
+    cudaDeviceSynchronize();
     
     // copy device result ot host
     cudaMemcpy(h_total, d_total, grid*sizeof(int), cudaMemcpyDeviceToHost);
@@ -734,20 +713,13 @@ int main(int argc, char *argv[])
     
     g2conflict_time = cpuSecond() - g2conflict_start;
     cout << "m2_detection_time: " << g2conflict_time << " usec" << endl;
-    printf("m2 conflict detection: %d\t", sum);
-    //for(int tmp = 0; tmp < grid; tmp++)
-	//cout<< h_total[tmp]<< "\t";
-    cout<<endl;
-    cout<<endl;
-    //fout<< g2conflict_time<< "\t";
-    //for(int tmp = 0; tmp < grid; tmp++)
-	//fout<< h_total[tmp]<< "\t";
-    //fout<< "\n";
+    printf("m2 conflict detection: %d\n", sum);
     free(h_total);
     cudaFree(dev_filterSet);
     cudaFree(d_total);
-    cudaDeviceReset();
 
+
+    cudaDeviceReset();
 /*
 // ################ Prepare call host funtion ###################
     hconflict_start = cpuSecond();

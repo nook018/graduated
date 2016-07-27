@@ -1,0 +1,734 @@
+# 24 "filter.h"
+struct filter;
+# 1 "main.cudafe1.gpu"
+typedef char __nv_bool;
+# 212 "/usr/lib/gcc/x86_64-linux-gnu/4.8/include/stddef.h" 3
+typedef unsigned long size_t;
+#include "crt/device_runtime.h"
+# 7 "util.h"
+typedef unsigned UINT;
+# 9 "util.h"
+typedef unsigned UINT64;
+# 24 "filter.h"
+struct filter {
+# 26 "filter.h"
+UINT64 srcIP_;
+# 27 "filter.h"
+unsigned char srcIPLen_;
+# 28 "filter.h"
+unsigned char srcIPPref_[4];
+# 30 "filter.h"
+UINT64 destIP_;
+# 31 "filter.h"
+unsigned char destIPLen_;
+# 32 "filter.h"
+unsigned char destIPPref_[4];
+# 34 "filter.h"
+int srcPortleft_;
+# 35 "filter.h"
+int srcPortright_;
+# 36 "filter.h"
+int destPortleft_;
+# 37 "filter.h"
+int destPortright_;
+# 38 "filter.h"
+int pro_num_;
+# 41 "filter.h"
+int bitstream;
+# 43 "filter.h"
+unsigned cost_;
+# 44 "filter.h"
+__nv_bool Traceflag;
+# 45 "filter.h"
+__nv_bool add_marker;
+# 46 "filter.h"
+__nv_bool marker;
+# 47 "filter.h"
+struct filter *Pointer;
+# 48 "filter.h"
+struct filter *FPointer;};
+#if !defined(__CUDABE__)
+# 160 "/usr/local/cuda-7.5/bin/..//include/device_functions.h"
+ __device_builtin__ ___device__(extern  __no_sc__) void __syncthreads(void);
+#endif
+# 120 "/usr/local/cuda-7.5/bin/..//include/sm_30_intrinsics.hpp"
+___device__(static  __no_sc__) __inline__ int _Z11__shfl_downiji(int, unsigned, int);
+# 27 "main.cu"
+___device__(extern  __no_sc__) __inline__ int _Z13warpReduceSumi(int);
+# 37 "main.cu"
+___device__(extern  __no_sc__) __inline__ int _Z14blockReduceSumi(int);
+# 56 "main.cu"
+___device__(extern  __no_sc__) __inline__ UINT64 _Z9genPrefixjh(UINT64, unsigned char);
+# 108 "main.cu"
+__global__ __var_used__ extern void _Z21gpu_conflict_detect_0P6filteriPi(struct filter *const __restrict__, int, int *);
+# 210 "main.cu"
+__global__ __var_used__ extern void _Z21gpu_conflict_detect_1P6filteriPi(struct filter *const __restrict__, int, int *);
+# 309 "main.cu"
+__global__ __var_used__ extern void _Z21gpu_conflict_detect_2P6filteriPi(struct filter *const __restrict__, int, int *);
+# 310 "main.cu"
+static  __device__  __var_used__ const long _ZTVSt9basic_iosIcSt11char_traitsIcEE[4];
+# 311 "main.cu"
+static  __device__  __var_used__ const long *const _ZTTSo[1];
+# 312 "main.cu"
+static  __device__  __var_used__ const long _ZTVSt15basic_streambufIcSt11char_traitsIcEE[16];
+# 313 "main.cu"
+static  __device__  __var_used__ const long _ZTVSt13basic_filebufIcSt11char_traitsIcEE[16];
+# 314 "main.cu"
+static  __device__  __var_used__ const long *const _ZTTSt14basic_ofstreamIcSt11char_traitsIcEE[1];
+#include "common_functions.h"
+#if !defined(__CUDABE__)
+#endif
+# 120 "/usr/local/cuda-7.5/bin/..//include/sm_30_intrinsics.hpp"
+___device__(static  __no_sc__) __inline__ int _Z11__shfl_downiji(
+# 120 "/usr/local/cuda-7.5/bin/..//include/sm_30_intrinsics.hpp"
+int var, 
+# 120 "/usr/local/cuda-7.5/bin/..//include/sm_30_intrinsics.hpp"
+unsigned delta, 
+# 120 "/usr/local/cuda-7.5/bin/..//include/sm_30_intrinsics.hpp"
+int width){
+# 120 "/usr/local/cuda-7.5/bin/..//include/sm_30_intrinsics.hpp"
+{
+# 120 "/usr/local/cuda-7.5/bin/..//include/sm_30_intrinsics.hpp"
+{
+# 121 "/usr/local/cuda-7.5/bin/..//include/sm_30_intrinsics.hpp"
+ int __cuda_local_var_11819_6_non_const_ret;
+# 122 "/usr/local/cuda-7.5/bin/..//include/sm_30_intrinsics.hpp"
+ int __cuda_local_var_11820_6_non_const_c;
+# 122 "/usr/local/cuda-7.5/bin/..//include/sm_30_intrinsics.hpp"
+__cuda_local_var_11820_6_non_const_c = (((32 - width) << 8) | 31);
+# 123 "/usr/local/cuda-7.5/bin/..//include/sm_30_intrinsics.hpp"
+__asm volatile("shfl.down.b32 %0, %1, %2, %3;" : "=r" (__cuda_local_var_11819_6_non_const_ret) : "r" (var), "r" (delta), "r" (__cuda_local_var_11820_6_non_const_c));
+# 124 "/usr/local/cuda-7.5/bin/..//include/sm_30_intrinsics.hpp"
+return __cuda_local_var_11819_6_non_const_ret;
+# 125 "/usr/local/cuda-7.5/bin/..//include/sm_30_intrinsics.hpp"
+}
+# 125 "/usr/local/cuda-7.5/bin/..//include/sm_30_intrinsics.hpp"
+}}
+# 27 "main.cu"
+___device__( __no_sc__) __inline__ int _Z13warpReduceSumi(
+# 27 "main.cu"
+int val){
+# 27 "main.cu"
+{
+# 28 "main.cu"
+{
+# 28 "main.cu"
+{
+# 29 "main.cu"
+ int offset;
+# 29 "main.cu"
+offset = (warpSize / 2);
+# 29 "main.cu"
+for (; (offset > 0); offset /= 2)
+# 30 "main.cu"
+{
+# 31 "main.cu"
+val += (_Z11__shfl_downiji(val, ((unsigned)offset), 32));
+# 33 "main.cu"
+}
+# 33 "main.cu"
+}
+# 34 "main.cu"
+return val;
+# 35 "main.cu"
+}
+# 35 "main.cu"
+}}
+# 37 "main.cu"
+___device__( __no_sc__) __inline__ int _Z14blockReduceSumi(
+# 37 "main.cu"
+int val){
+# 37 "main.cu"
+{
+# 38 "main.cu"
+{
+# 39 "main.cu"
+static  __shared__  __var_used__ int __cuda_local_var_62504_40_non_const_shared[16];
+# 41 "main.cu"
+ int __cuda_local_var_62506_9_non_const_lane;
+# 42 "main.cu"
+ int __cuda_local_var_62507_9_non_const_wid;
+# 41 "main.cu"
+__cuda_local_var_62506_9_non_const_lane = ((int)((threadIdx.x) % ((unsigned)warpSize)));
+# 42 "main.cu"
+__cuda_local_var_62507_9_non_const_wid = ((int)((threadIdx.x) / ((unsigned)warpSize)));
+# 44 "main.cu"
+val = (_Z13warpReduceSumi(val));
+# 46 "main.cu"
+if (__cuda_local_var_62506_9_non_const_lane == 0)
+# 46 "main.cu"
+{
+# 46 "main.cu"
+((__cuda_local_var_62504_40_non_const_shared)[__cuda_local_var_62507_9_non_const_wid]) = val;
+# 46 "main.cu"
+}
+# 48 "main.cu"
+__syncthreads();
+# 50 "main.cu"
+val = (((threadIdx.x) < ((blockDim.x) / ((unsigned)warpSize))) ? ((__cuda_local_var_62504_40_non_const_shared)[__cuda_local_var_62506_9_non_const_lane]) : 0);
+# 51 "main.cu"
+if (__cuda_local_var_62507_9_non_const_wid == 0)
+# 51 "main.cu"
+{
+# 51 "main.cu"
+val = (_Z13warpReduceSumi(val));
+# 51 "main.cu"
+}
+# 53 "main.cu"
+return val;
+# 54 "main.cu"
+}
+# 54 "main.cu"
+}}
+# 56 "main.cu"
+___device__( __no_sc__) __inline__ UINT64 _Z9genPrefixjh(
+# 56 "main.cu"
+UINT64 prefix, 
+# 56 "main.cu"
+unsigned char len){
+# 56 "main.cu"
+{
+# 57 "main.cu"
+{
+# 58 "main.cu"
+register UINT64 result;
+# 59 "main.cu"
+register UINT mask_m;
+# 61 "main.cu"
+if (((int)len) == 0)
+# 61 "main.cu"
+{
+# 62 "main.cu"
+return 0U;
+# 62 "main.cu"
+}
+# 63 "main.cu"
+else 
+# 63 "main.cu"
+{
+# 65 "main.cu"
+mask_m = (4294967295U << (32 - ((int)len)));
+# 66 "main.cu"
+result = (prefix & mask_m);
+# 67 "main.cu"
+return result;
+# 68 "main.cu"
+}
+# 69 "main.cu"
+}
+# 69 "main.cu"
+}}
+# 108 "main.cu"
+__global__ __var_used__ void _Z21gpu_conflict_detect_0P6filteriPi(
+# 108 "main.cu"
+struct filter *const __restrict__ filterSet, 
+# 108 "main.cu"
+int rule_size, 
+# 108 "main.cu"
+int *d_total){
+# 108 "main.cu"
+{
+# 109 "main.cu"
+{
+# 111 "main.cu"
+ int __cuda_local_var_62576_9_non_const_threadID;
+# 112 "main.cu"
+ int __cuda_local_var_62577_9_non_const_threadSize;
+# 113 "main.cu"
+ int __cuda_local_var_62578_9_non_const_base;
+# 114 "main.cu"
+ int __cuda_local_var_62579_9_non_const_start;
+# 115 "main.cu"
+ int __cuda_local_var_62580_9_non_const_total;
+# 111 "main.cu"
+__cuda_local_var_62576_9_non_const_threadID = ((int)(((blockDim.x) * (blockIdx.x)) + (threadIdx.x)));
+# 112 "main.cu"
+__cuda_local_var_62577_9_non_const_threadSize = ((int)((gridDim.x) * (blockDim.x)));
+# 113 "main.cu"
+__cuda_local_var_62578_9_non_const_base = ((rule_size / __cuda_local_var_62577_9_non_const_threadSize) + 1);
+# 114 "main.cu"
+__cuda_local_var_62579_9_non_const_start = (__cuda_local_var_62576_9_non_const_threadID * __cuda_local_var_62578_9_non_const_base);
+# 115 "main.cu"
+__cuda_local_var_62580_9_non_const_total = 0;
+# 118 "main.cu"
+if (__cuda_local_var_62579_9_non_const_start > rule_size)
+# 118 "main.cu"
+{
+# 118 "main.cu"
+return;
+# 118 "main.cu"
+}
+# 118 "main.cu"
+{
+# 119 "main.cu"
+ int i;
+# 119 "main.cu"
+i = __cuda_local_var_62579_9_non_const_start;
+# 119 "main.cu"
+for (; ((i < (__cuda_local_var_62579_9_non_const_start + __cuda_local_var_62578_9_non_const_base)) && (i < rule_size)); i++)
+# 119 "main.cu"
+{
+# 119 "main.cu"
+{
+# 122 "main.cu"
+ int j;
+# 122 "main.cu"
+j = 0;
+# 124 "main.cu"
+
+#pragma unroll
+for (; (j < rule_size); j++)
+# 122 "main.cu"
+{
+# 124 "main.cu"
+if (((int)((filterSet[i]).srcIPLen_)) > ((int)((filterSet[j]).srcIPLen_)))
+# 124 "main.cu"
+{
+# 125 "main.cu"
+if ((_Z9genPrefixjh(((filterSet[i]).srcIP_), ((filterSet[j]).srcIPLen_))) == ((filterSet[j]).srcIP_))
+# 125 "main.cu"
+{
+# 126 "main.cu"
+if (((!((filterSet[i]).pro_num_)) || (!((filterSet[j]).pro_num_))) || (((filterSet[i]).pro_num_) == ((filterSet[j]).pro_num_)))
+# 126 "main.cu"
+{
+# 127 "main.cu"
+if (((((((filterSet[i]).destPortleft_) <= ((filterSet[j]).destPortright_)) && (((filterSet[i]).destPortleft_) >= ((filterSet[j]).destPortleft_))) || ((((filterSet[i]).destPortright_) >= ((filterSet[j]).destPortleft_)) && (((filterSet[i]).destPortright_) <= ((filterSet[j]).destPortright_)))) || ((((filterSet[i]).destPortright_) >= ((filterSet[j]).destPortright_)) && (((filterSet[i]).destPortleft_) <= ((filterSet[j]).destPortleft_)))) && ((((((filterSet[i]).srcPortleft_) <= ((filterSet[j]).srcPortright_)) && (((filterSet[i]).srcPortleft_) >= ((filterSet[j]).srcPortleft_))) || ((((filterSet[i]).srcPortright_) >= ((filterSet[j]).srcPortleft_)) && (((filterSet[i]).srcPortright_) <= ((filterSet[j]).srcPortright_)))) || ((((filterSet[i]).srcPortright_) >= ((filterSet[j]).srcPortright_)) && (((filterSet[i]).srcPortleft_) <= ((filterSet[j]).srcPortleft_)))))
+# 143 "main.cu"
+{
+# 146 "main.cu"
+if (((int)((filterSet[i]).destIPLen_)) > ((int)((filterSet[j]).destIPLen_)))
+# 146 "main.cu"
+{
+# 147 "main.cu"
+if ((_Z9genPrefixjh(((filterSet[i]).destIP_), ((filterSet[j]).destIPLen_))) == ((filterSet[j]).destIP_))
+# 147 "main.cu"
+{
+# 150 "main.cu"
+if ((((((filterSet[i]).destPortleft_) <= ((filterSet[j]).destPortleft_)) && (((filterSet[i]).destPortright_) >= ((filterSet[j]).destPortright_))) && ((((filterSet[i]).srcPortleft_) <= ((filterSet[j]).srcPortleft_)) && (((filterSet[i]).srcPortright_) >= ((filterSet[j]).srcPortright_)))) && ((((filterSet[i]).pro_num_) == ((filterSet[j]).pro_num_)) || (((filterSet[i]).pro_num_) == 0)))
+# 154 "main.cu"
+{
+# 154 "main.cu"
+}
+# 154 "main.cu"
+else 
+# 154 "main.cu"
+{
+# 158 "main.cu"
+__cuda_local_var_62580_9_non_const_total++;
+# 158 "main.cu"
+}
+# 159 "main.cu"
+}
+# 160 "main.cu"
+}
+# 162 "main.cu"
+if (((int)((filterSet[i]).destIPLen_)) < ((int)((filterSet[j]).destIPLen_)))
+# 162 "main.cu"
+{
+# 163 "main.cu"
+if ((_Z9genPrefixjh(((filterSet[j]).destIP_), ((filterSet[i]).destIPLen_))) == ((filterSet[i]).destIP_))
+# 163 "main.cu"
+{
+# 175 "main.cu"
+__cuda_local_var_62580_9_non_const_total++;
+# 176 "main.cu"
+}
+# 177 "main.cu"
+}
+# 179 "main.cu"
+if (((int)((filterSet[i]).destIPLen_)) == ((int)((filterSet[j]).destIPLen_)))
+# 179 "main.cu"
+{
+# 180 "main.cu"
+if (((filterSet[i]).destIP_) == ((filterSet[j]).destIP_))
+# 180 "main.cu"
+{
+# 183 "main.cu"
+if ((((((filterSet[i]).destPortleft_) <= ((filterSet[j]).destPortleft_)) && (((filterSet[i]).destPortright_) >= ((filterSet[j]).destPortright_))) && ((((filterSet[i]).srcPortleft_) <= ((filterSet[j]).srcPortleft_)) && (((filterSet[i]).srcPortright_) >= ((filterSet[j]).srcPortright_)))) && ((((filterSet[i]).pro_num_) == ((filterSet[j]).pro_num_)) || (((filterSet[i]).pro_num_) == 0)))
+# 187 "main.cu"
+{
+# 187 "main.cu"
+}
+# 187 "main.cu"
+else 
+# 187 "main.cu"
+{
+# 191 "main.cu"
+__cuda_local_var_62580_9_non_const_total++;
+# 191 "main.cu"
+}
+# 192 "main.cu"
+}
+# 193 "main.cu"
+}
+# 194 "main.cu"
+}
+# 195 "main.cu"
+}
+# 196 "main.cu"
+}
+# 197 "main.cu"
+}
+# 198 "main.cu"
+}
+# 198 "main.cu"
+}
+# 200 "main.cu"
+}
+# 200 "main.cu"
+}
+# 201 "main.cu"
+__cuda_local_var_62580_9_non_const_total = (_Z14blockReduceSumi(__cuda_local_var_62580_9_non_const_total));
+# 203 "main.cu"
+if ((threadIdx.x) == 0U)
+# 203 "main.cu"
+{
+# 204 "main.cu"
+(d_total[(blockIdx.x)]) = __cuda_local_var_62580_9_non_const_total;
+# 204 "main.cu"
+}
+# 207 "main.cu"
+} 
+# 207 "main.cu"
+}}
+# 210 "main.cu"
+__global__ __var_used__ void _Z21gpu_conflict_detect_1P6filteriPi(
+# 210 "main.cu"
+struct filter *const __restrict__ filterSet, 
+# 210 "main.cu"
+int rule_size, 
+# 210 "main.cu"
+int *d_total){
+# 210 "main.cu"
+{
+# 211 "main.cu"
+{
+# 213 "main.cu"
+ int __cuda_local_var_62668_9_non_const_threadID;
+# 214 "main.cu"
+ int __cuda_local_var_62669_9_non_const_threadSize;
+# 215 "main.cu"
+ int __cuda_local_var_62670_9_non_const_base;
+# 216 "main.cu"
+ int __cuda_local_var_62671_9_non_const_start;
+# 217 "main.cu"
+ int __cuda_local_var_62672_9_non_const_total;
+# 213 "main.cu"
+__cuda_local_var_62668_9_non_const_threadID = ((int)(((blockDim.x) * (blockIdx.x)) + (threadIdx.x)));
+# 214 "main.cu"
+__cuda_local_var_62669_9_non_const_threadSize = ((int)((gridDim.x) * (blockDim.x)));
+# 215 "main.cu"
+__cuda_local_var_62670_9_non_const_base = ((rule_size / __cuda_local_var_62669_9_non_const_threadSize) + 1);
+# 216 "main.cu"
+__cuda_local_var_62671_9_non_const_start = (__cuda_local_var_62668_9_non_const_threadID * __cuda_local_var_62670_9_non_const_base);
+# 217 "main.cu"
+__cuda_local_var_62672_9_non_const_total = 0;
+# 219 "main.cu"
+if (__cuda_local_var_62671_9_non_const_start > rule_size)
+# 219 "main.cu"
+{
+# 219 "main.cu"
+return;
+# 219 "main.cu"
+}
+# 219 "main.cu"
+{
+# 220 "main.cu"
+ int i;
+# 220 "main.cu"
+i = __cuda_local_var_62671_9_non_const_start;
+# 220 "main.cu"
+for (; ((i < (__cuda_local_var_62671_9_non_const_start + __cuda_local_var_62670_9_non_const_base)) && (i < rule_size)); i++)
+# 220 "main.cu"
+{
+# 220 "main.cu"
+{
+# 223 "main.cu"
+ int j;
+# 223 "main.cu"
+j = 0;
+# 225 "main.cu"
+
+#pragma unroll
+for (; (j < i); j++)
+# 223 "main.cu"
+{
+# 225 "main.cu"
+if (((int)((filterSet[i]).srcIPLen_)) > ((int)((filterSet[j]).srcIPLen_)))
+# 225 "main.cu"
+{
+# 226 "main.cu"
+if ((_Z9genPrefixjh(((filterSet[i]).srcIP_), ((filterSet[j]).srcIPLen_))) == ((filterSet[j]).srcIP_))
+# 226 "main.cu"
+{
+# 227 "main.cu"
+if (((!((filterSet[i]).pro_num_)) || (!((filterSet[j]).pro_num_))) || (((filterSet[i]).pro_num_) == ((filterSet[j]).pro_num_)))
+# 227 "main.cu"
+{
+# 228 "main.cu"
+if (((((((filterSet[i]).destPortleft_) <= ((filterSet[j]).destPortright_)) && (((filterSet[i]).destPortleft_) >= ((filterSet[j]).destPortleft_))) || ((((filterSet[i]).destPortright_) >= ((filterSet[j]).destPortleft_)) && (((filterSet[i]).destPortright_) <= ((filterSet[j]).destPortright_)))) || ((((filterSet[i]).destPortright_) >= ((filterSet[j]).destPortright_)) && (((filterSet[i]).destPortleft_) <= ((filterSet[j]).destPortleft_)))) && ((((((filterSet[i]).srcPortleft_) <= ((filterSet[j]).srcPortright_)) && (((filterSet[i]).srcPortleft_) >= ((filterSet[j]).srcPortleft_))) || ((((filterSet[i]).srcPortright_) >= ((filterSet[j]).srcPortleft_)) && (((filterSet[i]).srcPortright_) <= ((filterSet[j]).srcPortright_)))) || ((((filterSet[i]).srcPortright_) >= ((filterSet[j]).srcPortright_)) && (((filterSet[i]).srcPortleft_) <= ((filterSet[j]).srcPortleft_)))))
+# 244 "main.cu"
+{
+# 247 "main.cu"
+if (((int)((filterSet[i]).destIPLen_)) > ((int)((filterSet[j]).destIPLen_)))
+# 247 "main.cu"
+{
+# 248 "main.cu"
+if ((_Z9genPrefixjh(((filterSet[i]).destIP_), ((filterSet[j]).destIPLen_))) == ((filterSet[j]).destIP_))
+# 248 "main.cu"
+{
+# 251 "main.cu"
+if ((((((filterSet[i]).destPortleft_) <= ((filterSet[j]).destPortleft_)) && (((filterSet[i]).destPortright_) >= ((filterSet[j]).destPortright_))) && ((((filterSet[i]).srcPortleft_) <= ((filterSet[j]).srcPortleft_)) && (((filterSet[i]).srcPortright_) >= ((filterSet[j]).srcPortright_)))) && ((((filterSet[i]).pro_num_) == ((filterSet[j]).pro_num_)) || (((filterSet[i]).pro_num_) == 0)))
+# 255 "main.cu"
+{
+# 255 "main.cu"
+}
+# 255 "main.cu"
+else 
+# 255 "main.cu"
+{
+# 259 "main.cu"
+__cuda_local_var_62672_9_non_const_total++;
+# 259 "main.cu"
+}
+# 260 "main.cu"
+}
+# 261 "main.cu"
+}
+# 263 "main.cu"
+if (((int)((filterSet[i]).destIPLen_)) < ((int)((filterSet[j]).destIPLen_)))
+# 263 "main.cu"
+{
+# 264 "main.cu"
+if ((_Z9genPrefixjh(((filterSet[j]).destIP_), ((filterSet[i]).destIPLen_))) == ((filterSet[i]).destIP_))
+# 264 "main.cu"
+{
+# 276 "main.cu"
+__cuda_local_var_62672_9_non_const_total++;
+# 277 "main.cu"
+}
+# 278 "main.cu"
+}
+# 280 "main.cu"
+if (((int)((filterSet[i]).destIPLen_)) == ((int)((filterSet[j]).destIPLen_)))
+# 280 "main.cu"
+{
+# 281 "main.cu"
+if (((filterSet[i]).destIP_) == ((filterSet[j]).destIP_))
+# 281 "main.cu"
+{
+# 284 "main.cu"
+if ((((((filterSet[i]).destPortleft_) <= ((filterSet[j]).destPortleft_)) && (((filterSet[i]).destPortright_) >= ((filterSet[j]).destPortright_))) && ((((filterSet[i]).srcPortleft_) <= ((filterSet[j]).srcPortleft_)) && (((filterSet[i]).srcPortright_) >= ((filterSet[j]).srcPortright_)))) && ((((filterSet[i]).pro_num_) == ((filterSet[j]).pro_num_)) || (((filterSet[i]).pro_num_) == 0)))
+# 288 "main.cu"
+{
+# 288 "main.cu"
+}
+# 288 "main.cu"
+else 
+# 288 "main.cu"
+{
+# 292 "main.cu"
+__cuda_local_var_62672_9_non_const_total++;
+# 292 "main.cu"
+}
+# 293 "main.cu"
+}
+# 294 "main.cu"
+}
+# 295 "main.cu"
+}
+# 296 "main.cu"
+}
+# 297 "main.cu"
+}
+# 298 "main.cu"
+}
+# 299 "main.cu"
+}
+# 299 "main.cu"
+}
+# 300 "main.cu"
+}
+# 300 "main.cu"
+}
+# 301 "main.cu"
+__cuda_local_var_62672_9_non_const_total = (_Z14blockReduceSumi(__cuda_local_var_62672_9_non_const_total));
+# 302 "main.cu"
+if ((threadIdx.x) == 0U)
+# 302 "main.cu"
+{
+# 303 "main.cu"
+(d_total[(blockIdx.x)]) = __cuda_local_var_62672_9_non_const_total;
+# 303 "main.cu"
+}
+# 306 "main.cu"
+} 
+# 306 "main.cu"
+}}
+# 309 "main.cu"
+__global__ __var_used__ void _Z21gpu_conflict_detect_2P6filteriPi(
+# 309 "main.cu"
+struct filter *const __restrict__ filterSet, 
+# 309 "main.cu"
+int rule_size, 
+# 309 "main.cu"
+int *d_total){
+# 309 "main.cu"
+{
+# 310 "main.cu"
+{
+# 312 "main.cu"
+ int __cuda_local_var_62757_9_non_const_start;
+# 313 "main.cu"
+ int __cuda_local_var_62758_9_non_const_threadSize;
+# 314 "main.cu"
+ int __cuda_local_var_62759_9_non_const_total;
+# 312 "main.cu"
+__cuda_local_var_62757_9_non_const_start = ((int)(((threadIdx.x) * (gridDim.x)) + (blockIdx.x)));
+# 313 "main.cu"
+__cuda_local_var_62758_9_non_const_threadSize = ((int)((gridDim.x) * (blockDim.x)));
+# 314 "main.cu"
+__cuda_local_var_62759_9_non_const_total = 0;
+# 317 "main.cu"
+if (__cuda_local_var_62757_9_non_const_start > rule_size)
+# 317 "main.cu"
+{
+# 317 "main.cu"
+return;
+# 317 "main.cu"
+}
+# 317 "main.cu"
+{
+# 318 "main.cu"
+ int i;
+# 318 "main.cu"
+i = __cuda_local_var_62757_9_non_const_start;
+# 318 "main.cu"
+for (; (i < rule_size); i += __cuda_local_var_62758_9_non_const_threadSize)
+# 318 "main.cu"
+{
+# 318 "main.cu"
+{
+# 322 "main.cu"
+ int j;
+# 322 "main.cu"
+j = 0;
+# 324 "main.cu"
+
+#pragma unroll
+for (; (j < i); j++)
+# 322 "main.cu"
+{
+# 324 "main.cu"
+if (((int)((filterSet[i]).srcIPLen_)) > ((int)((filterSet[j]).srcIPLen_)))
+# 324 "main.cu"
+{
+# 325 "main.cu"
+if ((_Z9genPrefixjh(((filterSet[i]).srcIP_), ((filterSet[j]).srcIPLen_))) == ((filterSet[j]).srcIP_))
+# 325 "main.cu"
+{
+# 326 "main.cu"
+if (((!((filterSet[i]).pro_num_)) || (!((filterSet[j]).pro_num_))) || (((filterSet[i]).pro_num_) == ((filterSet[j]).pro_num_)))
+# 326 "main.cu"
+{
+# 327 "main.cu"
+if (((((((filterSet[i]).destPortleft_) <= ((filterSet[j]).destPortright_)) && (((filterSet[i]).destPortleft_) >= ((filterSet[j]).destPortleft_))) || ((((filterSet[i]).destPortright_) >= ((filterSet[j]).destPortleft_)) && (((filterSet[i]).destPortright_) <= ((filterSet[j]).destPortright_)))) || ((((filterSet[i]).destPortright_) >= ((filterSet[j]).destPortright_)) && (((filterSet[i]).destPortleft_) <= ((filterSet[j]).destPortleft_)))) && ((((((filterSet[i]).srcPortleft_) <= ((filterSet[j]).srcPortright_)) && (((filterSet[i]).srcPortleft_) >= ((filterSet[j]).srcPortleft_))) || ((((filterSet[i]).srcPortright_) >= ((filterSet[j]).srcPortleft_)) && (((filterSet[i]).srcPortright_) <= ((filterSet[j]).srcPortright_)))) || ((((filterSet[i]).srcPortright_) >= ((filterSet[j]).srcPortright_)) && (((filterSet[i]).srcPortleft_) <= ((filterSet[j]).srcPortleft_)))))
+# 343 "main.cu"
+{
+# 346 "main.cu"
+if (((int)((filterSet[i]).destIPLen_)) > ((int)((filterSet[j]).destIPLen_)))
+# 346 "main.cu"
+{
+# 347 "main.cu"
+if ((_Z9genPrefixjh(((filterSet[i]).destIP_), ((filterSet[j]).destIPLen_))) == ((filterSet[j]).destIP_))
+# 347 "main.cu"
+{
+# 350 "main.cu"
+if ((((((filterSet[i]).destPortleft_) <= ((filterSet[j]).destPortleft_)) && (((filterSet[i]).destPortright_) >= ((filterSet[j]).destPortright_))) && ((((filterSet[i]).srcPortleft_) <= ((filterSet[j]).srcPortleft_)) && (((filterSet[i]).srcPortright_) >= ((filterSet[j]).srcPortright_)))) && ((((filterSet[i]).pro_num_) == ((filterSet[j]).pro_num_)) || (((filterSet[i]).pro_num_) == 0)))
+# 354 "main.cu"
+{
+# 354 "main.cu"
+}
+# 354 "main.cu"
+else 
+# 354 "main.cu"
+{
+# 358 "main.cu"
+__cuda_local_var_62759_9_non_const_total++;
+# 358 "main.cu"
+}
+# 360 "main.cu"
+}
+# 361 "main.cu"
+}
+# 363 "main.cu"
+if (((int)((filterSet[i]).destIPLen_)) < ((int)((filterSet[j]).destIPLen_)))
+# 363 "main.cu"
+{
+# 364 "main.cu"
+if ((_Z9genPrefixjh(((filterSet[j]).destIP_), ((filterSet[i]).destIPLen_))) == ((filterSet[i]).destIP_))
+# 364 "main.cu"
+{
+# 376 "main.cu"
+__cuda_local_var_62759_9_non_const_total++;
+# 378 "main.cu"
+}
+# 379 "main.cu"
+}
+# 381 "main.cu"
+if (((int)((filterSet[i]).destIPLen_)) == ((int)((filterSet[j]).destIPLen_)))
+# 381 "main.cu"
+{
+# 382 "main.cu"
+if (((filterSet[i]).destIP_) == ((filterSet[j]).destIP_))
+# 382 "main.cu"
+{
+# 385 "main.cu"
+if ((((((filterSet[i]).destPortleft_) <= ((filterSet[j]).destPortleft_)) && (((filterSet[i]).destPortright_) >= ((filterSet[j]).destPortright_))) && ((((filterSet[i]).srcPortleft_) <= ((filterSet[j]).srcPortleft_)) && (((filterSet[i]).srcPortright_) >= ((filterSet[j]).srcPortright_)))) && ((((filterSet[i]).pro_num_) == ((filterSet[j]).pro_num_)) || (((filterSet[i]).pro_num_) == 0)))
+# 389 "main.cu"
+{
+# 389 "main.cu"
+}
+# 389 "main.cu"
+else 
+# 389 "main.cu"
+{
+# 393 "main.cu"
+__cuda_local_var_62759_9_non_const_total++;
+# 393 "main.cu"
+}
+# 396 "main.cu"
+}
+# 397 "main.cu"
+}
+# 398 "main.cu"
+}
+# 400 "main.cu"
+}
+# 401 "main.cu"
+}
+# 402 "main.cu"
+}
+# 403 "main.cu"
+}
+# 403 "main.cu"
+}
+# 404 "main.cu"
+}
+# 404 "main.cu"
+}
+# 406 "main.cu"
+__cuda_local_var_62759_9_non_const_total = (_Z14blockReduceSumi(__cuda_local_var_62759_9_non_const_total));
+# 407 "main.cu"
+if ((threadIdx.x) == 0U)
+# 407 "main.cu"
+{
+# 408 "main.cu"
+(d_total[(blockIdx.x)]) = __cuda_local_var_62759_9_non_const_total;
+# 408 "main.cu"
+}
+# 409 "main.cu"
+} 
+# 409 "main.cu"
+}}
