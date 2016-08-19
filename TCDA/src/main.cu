@@ -36,8 +36,10 @@ __inline__ __device__ int warpReduceSum(int val)
 
 __inline__ __device__ int blockReduceSum(int val)
 {
-    static __shared__ int shared[16];
+    static __shared__ int shared[64];
+    //static __shared__ int shared[12*1024];
     
+
     int lane = threadIdx.x % warpSize;
     int wid = threadIdx.x / warpSize; 
     
@@ -108,18 +110,21 @@ void bubble_sort(clsFilterDB item, int len)
 __global__ void gpu_conflict_detect_0(filter * const __restrict__ filterSet, int rule_size, int* d_total)
 {
     //printf("blockIdx.x: %d, threadIdx.x: %d\n", blockIdx.x, threadIdx.x);
-    int threadID = blockDim.x * blockIdx.x + threadIdx.x;
-    int threadSize = gridDim.x * blockDim.x;
-    int base = rule_size/threadSize+1;
-    int start = threadID*base;
-    int total = 0;
+    unsigned short threadID = blockDim.x * blockIdx.x + threadIdx.x;
+    unsigned short threadSize = gridDim.x * blockDim.x;
+    unsigned short base = rule_size/threadSize+1;
+    unsigned short start = threadID*base;
+    unsigned int total = 0;
+
     
     //printf("threadSize:%d,%d\n", threadSize, rule_size/threadSize + 1);
     if(start > rule_size) return;
-    for (int i=start; i<(start+base) && i<rule_size ; i++) {
+    //int k = 0;
+    for (unsigned short i=start; i<(start+base) && i<rule_size ; i++) {
     //for(int i=threadID; i<rule_size; i+=threadSize){  
+        //k = rule_size - i;
         #pragma unroll    
-        for (int j= 0; j<rule_size; j++) {
+        for (unsigned short j= 0; j<rule_size; j++) {
 	    //if(j>=i) return;
             if( filterSet[i].srcIPLen_ > filterSet[j].srcIPLen_ ){
                 if( genPrefix(filterSet[i].srcIP_, filterSet[j].srcIPLen_) == filterSet[j].srcIP_ ){
@@ -196,32 +201,34 @@ __global__ void gpu_conflict_detect_0(filter * const __restrict__ filterSet, int
                 }
             }
         }
-
     }
+ 
     total = blockReduceSum(total);
-
     if(threadIdx.x == 0)
 	d_total[blockIdx.x] = total;
 
-
 }
 
-// base on new, distribute filters to thread by order. (approach 1)
+// distribute filters after sorting, to thread by order. (approach 1)
 __global__ void gpu_conflict_detect_1(filter * const __restrict__ filterSet, int rule_size, int* d_total)
 {
     //printf("blockIdx.x: %d, threadIdx.x: %d\n", blockIdx.x, threadIdx.x);
-    int threadID = blockDim.x * blockIdx.x + threadIdx.x;
-    int threadSize = gridDim.x * blockDim.x;
-    int base = rule_size/threadSize+1;
-    int start = threadID*base;
-    int total = 0;
-   
+    unsigned short threadID = blockDim.x * blockIdx.x + threadIdx.x;
+    unsigned short threadSize = gridDim.x * blockDim.x;
+    unsigned short base = rule_size/threadSize+1;
+    unsigned short start = threadID*base;
+    unsigned int total = 0;
+
+    
+    //printf("threadSize:%d,%d\n", threadSize, rule_size/threadSize + 1);
     if(start > rule_size) return;
-    for (int i=start; i<(start+base) && i<rule_size ; i++) {
+    //int k = 0;
+    for (unsigned short i=start; i<(start+base) && i<rule_size ; i++) {
     //for(int i=threadID; i<rule_size; i+=threadSize){  
-        #pragma unroll     
-        for (int j= 0; j<i; j++) {
-	    //if(j>=i) break;
+        //k = rule_size - i;
+        #pragma unroll    
+        for (unsigned short j= 0; j<i; j++) {
+	    //if(j>=i) return;
             if( filterSet[i].srcIPLen_ > filterSet[j].srcIPLen_ ){
                 if( genPrefix(filterSet[i].srcIP_, filterSet[j].srcIPLen_) == filterSet[j].srcIP_ ){
                     if(( (!filterSet[i].pro_num_ || !filterSet[j].pro_num_) || (filterSet[i].pro_num_ == filterSet[j].pro_num_ )) ) {
@@ -270,7 +277,7 @@ __global__ void gpu_conflict_detect_1(filter * const __restrict__ filterSet, int
                                      ( (rule.filterSet_[i].pro_num_ == rule.filterSet_[j].pro_num_) || (rule.filterSet_[i].pro_num_ == 0) )
                                      ){}
                                      else
-                                     */
+                                    */
                                     //devTotal++;
                                     //devTotal[threadID].result++;
 				    total++;
@@ -298,28 +305,28 @@ __global__ void gpu_conflict_detect_1(filter * const __restrict__ filterSet, int
             }
         }
     }
+ 
     total = blockReduceSum(total);
     if(threadIdx.x == 0)
 	d_total[blockIdx.x] = total;
 
-
 }
 
-// base on new, distribute filters to thread by work. (approach 2)
+// base on new, distribute filters to thread by order. (approach 1)
 __global__ void gpu_conflict_detect_2(filter * const __restrict__ filterSet, int rule_size, int* d_total)
 {
-    //printf("blockIdx.x: %d, threadIdx.x: %d\n", blockIdx.x, threadIdx.x);
-    int start = threadIdx.x * gridDim.x + blockIdx.x;
-    int threadSize = gridDim.x * blockDim.x;
+    ///printf("blockIdx.x: %d, threadIdx.x: %d\n", blockIdx.x, threadIdx.x);
+    unsigned short start = threadIdx.x * gridDim.x + blockIdx.x;
+    unsigned short threadSize = gridDim.x * blockDim.x;
     int total = 0;
     
     //printf("threadSize:%d,%d\n", threadSize, rule_size/threadSize + 1);
     if(start > rule_size) return;
-    for (int i=start; i<rule_size; i+=threadSize) {
+    for (unsigned short i=start; i<rule_size; i+=threadSize) {
     //for(int i=threadID; i<rule_size; i+=threadSize){  
         //devTotal[threadIndex].set = 1;
          #pragma unroll
-         for (int j= 0; j<i; j++) {
+         for (unsigned short j= 0; j<i; j++) {
 	    //if(j>=i) break;
             if( filterSet[i].srcIPLen_ > filterSet[j].srcIPLen_ ){
                 if( genPrefix(filterSet[i].srcIP_, filterSet[j].srcIPLen_) == filterSet[j].srcIP_ ){
@@ -406,6 +413,207 @@ __global__ void gpu_conflict_detect_2(filter * const __restrict__ filterSet, int
     total = blockReduceSum(total);
     if(threadIdx.x == 0)
 	d_total[blockIdx.x] = total;
+
+
+
+
+}
+
+
+// base on new, distribute filters to thread by work. (approach 2)
+__global__ void gpu_conflict_detect_3(filter * const __restrict__ filterSet, int rule_size, int* d_total)
+{
+    //printf("blockIdx.x: %d, threadIdx.x: %d\n", blockIdx.x, threadIdx.x);
+    //unsigned short start = threadIdx.x * gridDim.x + blockIdx.x;
+    unsigned short threadID = blockIdx.x * blockDim.x + threadIdx.x;
+    unsigned short threadSize = gridDim.x * blockDim.x;
+    unsigned short base = threadSize * 2;
+    unsigned short start = (base - 1) - threadID;
+    unsigned int total = 0;
+    
+    //printf("threadSize:%d,%d\n", threadSize, rule_size/threadSize + 1);
+    if(threadID > rule_size) return;
+    for (unsigned short i=threadID; i<rule_size; i+=base) {
+    //for(int i=threadID; i<rule_size; i+=threadSize){  
+        //devTotal[threadIndex].set = 1;
+         #pragma unroll
+         for (unsigned short j= 0; j<i; j++) {
+	    //if(j>=i) break;
+            if( filterSet[i].srcIPLen_ > filterSet[j].srcIPLen_ ){
+                if( genPrefix(filterSet[i].srcIP_, filterSet[j].srcIPLen_) == filterSet[j].srcIP_ ){
+                    if(( (!filterSet[i].pro_num_ || !filterSet[j].pro_num_) || (filterSet[i].pro_num_ == filterSet[j].pro_num_ )) ) {
+                        if (
+                            (
+                             
+                             ((filterSet[i].destPortleft_ <= filterSet[j].destPortright_) && (filterSet[i].destPortleft_ >= filterSet[j].destPortleft_))   ||
+                             ((filterSet[i].destPortright_ >= filterSet[j].destPortleft_) && (filterSet[i].destPortright_ <= filterSet[j].destPortright_)) ||
+                             ((filterSet[i].destPortright_ >= filterSet[j].destPortright_) && (filterSet[i].destPortleft_ <= filterSet[j].destPortleft_))
+                             
+                             )
+                            &&
+                            (
+                             ((filterSet[i].srcPortleft_ <= filterSet[j].srcPortright_) && (filterSet[i].srcPortleft_ >= filterSet[j].srcPortleft_))   ||
+                             ((filterSet[i].srcPortright_ >= filterSet[j].srcPortleft_) && (filterSet[i].srcPortright_ <= filterSet[j].srcPortright_)) ||
+                             ((filterSet[i].srcPortright_ >= filterSet[j].srcPortright_) && (filterSet[i].srcPortleft_ <= filterSet[j].srcPortleft_))
+                             
+                             )
+                            )
+                        {
+                            
+                            
+                            if (filterSet[i].destIPLen_ > filterSet[j].destIPLen_ ){
+                                if ( genPrefix(filterSet[i].destIP_, filterSet[j].destIPLen_) == filterSet[j].destIP_){
+                                    //counter1++;
+                                    
+                                    if(
+                                       ( (filterSet[i].destPortleft_ <= filterSet[j].destPortleft_) && (filterSet[i].destPortright_ >= filterSet[j].destPortright_) ) &&
+                                       ( (filterSet[i].srcPortleft_  <= filterSet[j].srcPortleft_)  && (filterSet[i].srcPortright_  >= filterSet[j].srcPortright_) ) &&
+                                       ( (filterSet[i].pro_num_ == filterSet[j].pro_num_) || (filterSet[i].pro_num_ == 0) )
+                                       ){}
+                                    else
+                                        //devTotal[threadIndex].result++;
+                                        //shm[threadIndex]++;
+					total++;
+					
+                                }
+                            }
+                            
+                            if (filterSet[i].destIPLen_ < filterSet[j].destIPLen_){
+                                if ( genPrefix(filterSet[j].destIP_, filterSet[i].destIPLen_) == filterSet[i].destIP_){
+                                    //counter2++;
+                                    /*
+                                     if(
+                                     ( (rule.filterSet_[i].destPortleft_ <= rule.filterSet_[j].destPortleft_) && (rule.filterSet_[i].destPortright_ >= rule.filterSet_[j].destPortright_) ) &&
+                                     ( (rule.filterSet_[i].srcPortleft_  <= rule.filterSet_[j].srcPortleft_)  && (rule.filterSet_[i].srcPortright_  >= rule.filterSet_[j].srcPortright_) ) &&
+                                     ( (rule.filterSet_[i].pro_num_ == rule.filterSet_[j].pro_num_) || (rule.filterSet_[i].pro_num_ == 0) )
+                                     ){}
+                                     else
+                                     */
+                                    //devTotal[threadIndex].result++;
+                                    //shm[threadIndex]++;
+				    total++;
+				    
+                                }
+                            }
+                            
+                            if (filterSet[i].destIPLen_ == filterSet[j].destIPLen_){
+                                if ( filterSet[i].destIP_ == filterSet[j].destIP_){
+                                    //counter3++;
+                                    
+                                    if(
+                                       ( (filterSet[i].destPortleft_ <= filterSet[j].destPortleft_) && (filterSet[i].destPortright_ >= filterSet[j].destPortright_) ) &&
+                                       ( (filterSet[i].srcPortleft_  <= filterSet[j].srcPortleft_)  && (filterSet[i].srcPortright_  >= filterSet[j].srcPortright_) ) &&
+                                       ( (filterSet[i].pro_num_ == filterSet[j].pro_num_) || (filterSet[i].pro_num_ == 0) )
+                                       ){}
+                                    else
+                                        //devTotal[threadIndex].result++;
+                                        //shm[threadIndex]++;
+					total++;
+					
+					
+                                }
+                            }
+                        }
+			
+                    }
+                }
+            }
+        }
+    }
+    //if(start > rule_size) return;
+    for (unsigned short i=start; i<rule_size; i+=base) {
+    //for(int i=threadID; i<rule_size; i+=threadSize){  
+        //devTotal[threadIndex].set = 1;
+         #pragma unroll
+         for (unsigned short j= 0; j<i; j++) {
+	    //if(j>=i) break;
+            if( filterSet[i].srcIPLen_ > filterSet[j].srcIPLen_ ){
+                if( genPrefix(filterSet[i].srcIP_, filterSet[j].srcIPLen_) == filterSet[j].srcIP_ ){
+                    if(( (!filterSet[i].pro_num_ || !filterSet[j].pro_num_) || (filterSet[i].pro_num_ == filterSet[j].pro_num_ )) ) {
+                        if (
+                            (
+                             
+                             ((filterSet[i].destPortleft_ <= filterSet[j].destPortright_) && (filterSet[i].destPortleft_ >= filterSet[j].destPortleft_))   ||
+                             ((filterSet[i].destPortright_ >= filterSet[j].destPortleft_) && (filterSet[i].destPortright_ <= filterSet[j].destPortright_)) ||
+                             ((filterSet[i].destPortright_ >= filterSet[j].destPortright_) && (filterSet[i].destPortleft_ <= filterSet[j].destPortleft_))
+                             
+                             )
+                            &&
+                            (
+                             ((filterSet[i].srcPortleft_ <= filterSet[j].srcPortright_) && (filterSet[i].srcPortleft_ >= filterSet[j].srcPortleft_))   ||
+                             ((filterSet[i].srcPortright_ >= filterSet[j].srcPortleft_) && (filterSet[i].srcPortright_ <= filterSet[j].srcPortright_)) ||
+                             ((filterSet[i].srcPortright_ >= filterSet[j].srcPortright_) && (filterSet[i].srcPortleft_ <= filterSet[j].srcPortleft_))
+                             
+                             )
+                            )
+                        {
+                            
+                            
+                            if (filterSet[i].destIPLen_ > filterSet[j].destIPLen_ ){
+                                if ( genPrefix(filterSet[i].destIP_, filterSet[j].destIPLen_) == filterSet[j].destIP_){
+                                    //counter1++;
+                                    
+                                    if(
+                                       ( (filterSet[i].destPortleft_ <= filterSet[j].destPortleft_) && (filterSet[i].destPortright_ >= filterSet[j].destPortright_) ) &&
+                                       ( (filterSet[i].srcPortleft_  <= filterSet[j].srcPortleft_)  && (filterSet[i].srcPortright_  >= filterSet[j].srcPortright_) ) &&
+                                       ( (filterSet[i].pro_num_ == filterSet[j].pro_num_) || (filterSet[i].pro_num_ == 0) )
+                                       ){}
+                                    else
+                                        //devTotal[threadIndex].result++;
+                                        //shm[threadIndex]++;
+					total++;
+					
+                                }
+                            }
+                            
+                            if (filterSet[i].destIPLen_ < filterSet[j].destIPLen_){
+                                if ( genPrefix(filterSet[j].destIP_, filterSet[i].destIPLen_) == filterSet[i].destIP_){
+                                    //counter2++;
+                                    /*
+                                     if(
+                                     ( (rule.filterSet_[i].destPortleft_ <= rule.filterSet_[j].destPortleft_) && (rule.filterSet_[i].destPortright_ >= rule.filterSet_[j].destPortright_) ) &&
+                                     ( (rule.filterSet_[i].srcPortleft_  <= rule.filterSet_[j].srcPortleft_)  && (rule.filterSet_[i].srcPortright_  >= rule.filterSet_[j].srcPortright_) ) &&
+                                     ( (rule.filterSet_[i].pro_num_ == rule.filterSet_[j].pro_num_) || (rule.filterSet_[i].pro_num_ == 0) )
+                                     ){}
+                                     else
+                                     */
+                                    //devTotal[threadIndex].result++;
+                                    //shm[threadIndex]++;
+				    total++;
+				    
+                                }
+                            }
+                            
+                            if (filterSet[i].destIPLen_ == filterSet[j].destIPLen_){
+                                if ( filterSet[i].destIP_ == filterSet[j].destIP_){
+                                    //counter3++;
+                                    
+                                    if(
+                                       ( (filterSet[i].destPortleft_ <= filterSet[j].destPortleft_) && (filterSet[i].destPortright_ >= filterSet[j].destPortright_) ) &&
+                                       ( (filterSet[i].srcPortleft_  <= filterSet[j].srcPortleft_)  && (filterSet[i].srcPortright_  >= filterSet[j].srcPortright_) ) &&
+                                       ( (filterSet[i].pro_num_ == filterSet[j].pro_num_) || (filterSet[i].pro_num_ == 0) )
+                                       ){}
+                                    else
+                                        //devTotal[threadIndex].result++;
+                                        //shm[threadIndex]++;
+					total++;
+					
+					
+                                }
+                            }
+                        }
+			
+                    }
+                }
+            }
+        }
+    }
+    //printf("%d\t", total);
+    total = blockReduceSum(total);
+    if(threadIdx.x == 0)
+	d_total[blockIdx.x] = total;
+
+
 }
 
 /*
@@ -517,7 +725,7 @@ __global__ void gpu_conflict_detect_2(const filter * __restrict__ filterSet, int
 void host_conflict_detect(filter *filterSet, int rule_size, int &total)
 {
     for (int i=0; i<rule_size; i++)	{
-        for (int j= 0; j<i; j++) {
+        for (int j= 0; j<rule_size; j++) {
             if( (filterSet[i].srcIPLen_ > filterSet[j].srcIPLen_ ) && ( genPrefix(filterSet[i].srcIP_, filterSet[j].srcIPLen_) == filterSet[j].srcIP_ ) ){
                 if(( (!filterSet[i].pro_num_ || !filterSet[j].pro_num_) || (filterSet[i].pro_num_ == filterSet[j].pro_num_ )) ) {
                     if (
@@ -596,13 +804,13 @@ int main(int argc, char *argv[])
     
     ofstream fout;
     //fout.open("0727M2.txt", ios::app);  
-    double sort_start, hconflict_start, g1conflict_start, g2conflict_start, g0conflict_start;
-    double sort_time, hconflict_time, g1conflict_time, g2conflict_time, g0conflict_time;
+    double sort_start, hconflict_start, g1conflict_start, g2conflict_start, g0conflict_start, g3conflict_start, g3copy1_start, g3copy2_start;
+    double sort_time, hconflict_time, g1conflict_time, g2conflict_time, g0conflict_time, g3conflict_time, g3copy1_time, g3copy2_time;
     int db_size;
     int total = 0;// for host computaion result
     int *d_total;// store device result
     int *h_total;// store host result
-    int sum = 0;
+    unsigned long sum = 0;
     
     // CUDA variable
     filter* dev_filterSet;	// store filter in device
@@ -613,14 +821,14 @@ int main(int argc, char *argv[])
 
     db_size = db.size();	// get database size
     printf("number of rules: %d\n", db_size);
-    int block = 128;
+    int block = 512;
     int grid = 8;
     //int grid =( db_size + block - 1)/block;
     //if(grid == 0)
 	//grid = 1;
     // set to 0 for copying to device variable
 
-    //cudaDeviceSetCacheConfig(cudaFuncCachePreferShared);
+    cudaDeviceSetCacheConfig(cudaFuncCachePreferL1);
     //cudaSetDevice(0);
 
 // ################ Prepare call M0 funtion ###################
@@ -635,12 +843,14 @@ int main(int argc, char *argv[])
     // call kernel function
     g0conflict_start = cpuSecond();
     // copy to device
+
+
     cudaMemcpy(dev_filterSet, db.filterSet_, db_size * sizeof(filter), cudaMemcpyHostToDevice);
     cudaCheckErrors("cudaMemcpy1 fail");
     gpu_conflict_detect_0<<<grid, block>>>(dev_filterSet, db_size, d_total);
     //cudaDeviceSynchronize();
     
-    
+   
     // copy device result ot host
     cudaMemcpy(h_total, d_total, grid*sizeof(int), cudaMemcpyDeviceToHost);
     sum = 0;
@@ -649,7 +859,7 @@ int main(int argc, char *argv[])
     
     g0conflict_time = cpuSecond() - g0conflict_start;
     cout << "m0_detection_time: " << g0conflict_time << " usec" << endl;
-    printf("m0 conflict detection: %d\t", sum);
+    printf("m0 conflict detection: %lu\t", sum);
     //for(int tmp = 0; tmp < grid; tmp++)
 	//cout<< h_total[tmp]<< "\t";
     cout<<endl;
@@ -662,13 +872,14 @@ int main(int argc, char *argv[])
     cudaFree(d_total);
     cudaDeviceReset();
 
+
     // sort filter with srcIPlen & desIPlen
     sort_start = cpuSecond();
     bubble_sort(db, db_size);
     sort_time = cpuSecond() - sort_start;
     //cout << "sort_time: " << sort_time << " usec" << endl;
 
-
+/*
 // ################ Prepare call M1 funtion ###################
     // prepare device variable
     cudaMalloc((void**)&dev_filterSet, db_size * sizeof(filter));
@@ -680,11 +891,12 @@ int main(int argc, char *argv[])
     // call kernel function
     g1conflict_start = cpuSecond();
     // copy to device
+
     cudaMemcpy(dev_filterSet, db.filterSet_, db_size * sizeof(filter), cudaMemcpyHostToDevice);
     cudaCheckErrors("cudaMemcpy1 fail");
     gpu_conflict_detect_1<<<grid, block>>>(dev_filterSet, db_size, d_total);
     //cudaDeviceSynchronize();
-    
+
 
     // copy device result ot host
     cudaMemcpy(h_total, d_total, grid*sizeof(int), cudaMemcpyDeviceToHost);
@@ -706,7 +918,7 @@ int main(int argc, char *argv[])
     cudaFree(dev_filterSet);
     cudaFree(d_total);
     cudaDeviceReset();
-
+*/
 
 // ################ Prepare call M2 funtion ###################
     // prepare device variable
@@ -734,11 +946,11 @@ int main(int argc, char *argv[])
     
     g2conflict_time = cpuSecond() - g2conflict_start;
     cout << "m2_detection_time: " << g2conflict_time << " usec" << endl;
-    printf("m2 conflict detection: %d\t", sum);
+    printf("m2 conflict detection: %lu\t", sum);
     //for(int tmp = 0; tmp < grid; tmp++)
 	//cout<< h_total[tmp]<< "\t";
     cout<<endl;
-    cout<<endl;
+
     //fout<< g2conflict_time<< "\t";
     //for(int tmp = 0; tmp < grid; tmp++)
 	//fout<< h_total[tmp]<< "\t";
@@ -748,7 +960,52 @@ int main(int argc, char *argv[])
     cudaFree(d_total);
     cudaDeviceReset();
 
-/*
+// ################ Prepare call M3 funtion ###################
+    // prepare device variable
+    cudaMalloc((void**)&dev_filterSet, db_size * sizeof(filter));
+    cudaCheckErrors("cudaMalloc1 fail");
+    cudaMalloc((void**)&d_total, grid*sizeof(int));
+    cudaCheckErrors("cudaMalloc2 fail");
+    cudaMemset(d_total, 0, grid*sizeof(int));
+    h_total = (int*)malloc(grid*sizeof(int));
+    // call kernel function
+    //g3conflict_start = cpuSecond();
+    g3copy1_start = cpuSecond();
+    // copy to device
+
+    cudaMemcpy(dev_filterSet, db.filterSet_, db_size * sizeof(filter), cudaMemcpyHostToDevice);
+    g3copy1_time = cpuSecond() - g3copy1_start;
+    cudaCheckErrors("cudaMemcpy1 fail");
+    g3conflict_start = cpuSecond();
+    gpu_conflict_detect_3<<<grid, block>>>(dev_filterSet, db_size, d_total);
+    //cudaDeviceSynchronize();
+    g3conflict_time = cpuSecond() - g3conflict_start;
+
+    g3copy2_start = cpuSecond();
+    // copy device result ot host
+    cudaMemcpy(h_total, d_total, grid*sizeof(int), cudaMemcpyDeviceToHost);
+    g3copy2_time = cpuSecond() - g3copy2_start; 
+    sum = 0;
+    for(int tmp = 0; tmp < grid; tmp++)
+	sum += h_total[tmp];
+        
+    cout << "m3_copy1_time: " << g3copy1_time << " usec" << endl;
+    cout << "m3_detection_time: " << g3conflict_time << " usec" << endl;
+    cout << "m3_copy2_time: " << g3copy2_time << " usec" << endl;
+    printf("m3 conflict detection: %d\t", sum);
+    //for(int tmp = 0; tmp < grid; tmp++)
+	//cout<< h_total[tmp]<< "\t";
+    cout<<endl;
+    //fout<< g1conflict_time<< "\t";
+    //for(int tmp = 0; tmp < grid; tmp++)
+	//fout<< h_total[tmp]<< "\t";
+    //fout<< "\n";
+    free(h_total);
+    cudaFree(dev_filterSet);
+    cudaFree(d_total);
+    cudaDeviceReset();
+
+
 // ################ Prepare call host funtion ###################
     hconflict_start = cpuSecond();
     host_conflict_detect(db.filterSet_, db_size, total);
@@ -756,15 +1013,16 @@ int main(int argc, char *argv[])
     cout.setf(ios::fixed);
     cout << std::noshowpoint << "host_detection_time: " << hconflict_time << " usec" << endl;
     printf("Host conflict detection: %d\n", total);
-*/    
-/*
-fout.open("0726_10248M1.txt", ios::app);   
-//fout<< hconflict_time<< "\t";
-fout<< g1conflict_time<< "\n";
+    cout<<endl;
+
+fout.open("0818_5128_fw5_5.txt", ios::app);   
+fout<< hconflict_time<< "\t";
+fout<< g0conflict_time<< "\t";
 //fout<< g1conflict_time<< "\t";
-//fout<< g2conflict_time<< "\n";
+fout<< g2conflict_time<< "\t";
+fout<< g3conflict_time<< "\n";
 fout.close();
-*/
+
     //free(cpy_dev);
     //cudaFree(dev_filterSet);
     //cudaFree(dev_total);
